@@ -1,0 +1,36 @@
+module_name: Terraform AWS Service Delegation Module
+module_description: The Terraform wrapper for AWS service delegation simplifies registering delegated administrator and organization-administrator accounts for CloudTrail, GuardDuty, and Security Hub from your AWS Organizations management account. This wrapper is a small, opinionated template so you do not have to wire those provider resources yourself. Supply settings through the `service_delegation_parameters` map (see `input_table`). It follows the same GoCloud `metadata` convention as other wrappers even though it does not apply tags to AWS resources.
+module_badges:
+  - url: "https://github.com/gocloudLa/terraform-aws-wrapper-service-delegation/releases/latest"
+    image: "https://img.shields.io/github/v/release/gocloudLa/terraform-aws-wrapper-service-delegation.svg?style=for-the-badge"
+    alt: "Latest Release"
+  - url: ""
+    image: "https://img.shields.io/github/last-commit/gocloudLa/terraform-aws-wrapper-service-delegation.svg?style=for-the-badge"
+    alt: "Last Commit"
+  - url: "https://registry.terraform.io/modules/gocloudLa/wrapper-service-delegation/aws"
+    image: "https://img.shields.io/badge/Terraform-Registry-7B42BC?style=for-the-badge&logo=terraform&logoColor=white"
+    alt: "Terraform Registry"
+quick_start: |
+  ```hcl
+  module "service_delegation" {
+    source = "gocloudLa/wrapper-service-delegation/aws"
+
+    metadata = local.metadata
+
+    service_delegation_parameters = {
+      cloudtrail   = "123456789012"
+      guardduty    = "123456789012"
+      security_hub = "123456789012"
+    }
+  }
+  ```
+important_notes: |
+  - **Management account:** Run with credentials for the AWS Organizations management account and IAM permissions that allow the underlying APIs.
+  - **enable:** Defaults to **true** when omitted; set `enable = false` to create no delegation resources. Each of `cloudtrail`, `guardduty`, and `security_hub` is optional—omit or set `null` to skip that registration.
+  - **Region:** GuardDuty and Security Hub registrations are evaluated in the configured AWS provider region.
+  - **Scope:** Other services (for example Config or IAM Identity Center) are not handled here; use `aws_organizations_delegated_administrator` or other modules as needed.
+input_table: |
+  | enable | When true, creates delegation resources for any supplied account ids; when false, creates none. | `bool` | `true` | no |
+  | cloudtrail | Member account id to register as CloudTrail organization delegated administrator. | `string` | `null` | no |
+  | guardduty | Member account id to designate as GuardDuty organization administrator. | `string` | `null` | no |
+  | security_hub | Member account id to designate as Security Hub organization administrator. | `string` | `null` | no |

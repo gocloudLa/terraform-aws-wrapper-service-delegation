@@ -1,0 +1,8 @@
+title: "Complete example"
+description: "Root module wiring for terraform-aws-wrapper-service-delegation (metadata + inline service_delegation_parameters)."
+main_purpose: "Wire the wrapper from the AWS Organizations management account with placeholder member account IDs."
+key_features:
+  - "**metadata** — Defined in `metadata.tf` (same pattern as other examples)."
+  - "**service_delegation_parameters** — Inline map in `main.tf` (no merge in this example)."
+  - "**Provider** — Single `aws` in `providers.tf`; must use the Organizations management account."
+  - "**enable** — Defaults to true in the module; set `enable = false` to create no delegation resources."

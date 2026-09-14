@@ -12,6 +12,12 @@ variable "metadata" {
 
 variable "service_delegation_parameters" {
   type        = any
-  description = ""
+  description = "Account IDs to register as delegated administrators for CloudTrail, GuardDuty, and Security Hub."
+  default     = {}
+}
+
+variable "service_delegation_defaults" {
+  type        = any
+  description = "Default values merged into each entry of service_delegation_parameters."
   default     = {}
 }

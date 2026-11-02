@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.0](https://github.com/gocloudLa/terraform-aws-wrapper-service-delegation/compare/v0.1.0...v0.2.0) (2026-11-02)
+
+
+### Features
+
+* **module:** add support for AWS Config, Backup, and StackSets deleg… ([#3](https://github.com/gocloudLa/terraform-aws-wrapper-service-delegation/issues/3)) ([13d18ba](https://github.com/gocloudLa/terraform-aws-wrapper-service-delegation/commit/13d18bae7b77df9d6dcc6ef94798ce3da0bc8e88))
+
 ## 0.1.0 (2026-09-14)
 
 

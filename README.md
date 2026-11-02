@@ -6,7 +6,7 @@ Each module encapsulates best practices, security configurations, and sensible d
 
 ## 📦 Module: Terraform AWS Service Delegation Module
 <p align="right"><a href="https://github.com/gocloudLa/terraform-aws-wrapper-service-delegation/releases/latest"><img src="https://img.shields.io/github/v/release/gocloudLa/terraform-aws-wrapper-service-delegation.svg?style=for-the-badge" alt="Latest Release"/></a><a href=""><img src="https://img.shields.io/github/last-commit/gocloudLa/terraform-aws-wrapper-service-delegation.svg?style=for-the-badge" alt="Last Commit"/></a><a href="https://registry.terraform.io/modules/gocloudLa/wrapper-service-delegation/aws"><img src="https://img.shields.io/badge/Terraform-Registry-7B42BC?style=for-the-badge&logo=terraform&logoColor=white" alt="Terraform Registry"/></a></p>
-The Terraform wrapper for AWS service delegation simplifies registering delegated administrator and organization-administrator accounts for CloudTrail, GuardDuty, and Security Hub from your AWS Organizations management account. This wrapper is a small, opinionated template so you do not have to wire those provider resources yourself. Supply settings through the `service_delegation_parameters` map (see `input_table`). It follows the same GoCloud `metadata` convention as other wrappers even though it does not apply tags to AWS resources.
+The Terraform wrapper for AWS service delegation simplifies registering delegated administrator and organization-administrator accounts for CloudTrail, GuardDuty, Security Hub, and AWS Config from your AWS Organizations management account. This wrapper is a small, opinionated template so you do not have to wire those provider resources yourself. Supply settings through the `service_delegation_parameters` map (see `input_table`). It follows the same GoCloud `metadata` convention as other wrappers even though it does not apply tags to AWS resources.
 
 ### ✨ Features
 
@@ -24,6 +24,9 @@ module "service_delegation" {
     cloudtrail   = "123456789012"
     guardduty    = "123456789012"
     security_hub = "123456789012"
+    config       = "123456789012"
+    backup       = "123456789012"
+    stacksets    = "123456789012"
   }
 }
 ```
@@ -34,12 +37,17 @@ module "service_delegation" {
 
 
 ## 📑 Inputs
-| Name         | Description                                                                                     | Type     | Default | Required |
-| ------------ | ----------------------------------------------------------------------------------------------- | -------- | ------- | -------- |
-| enable       | When true, creates delegation resources for any supplied account ids; when false, creates none. | `bool`   | `true`  | no       |
-| cloudtrail   | Member account id to register as CloudTrail organization delegated administrator.               | `string` | `null`  | no       |
-| guardduty    | Member account id to designate as GuardDuty organization administrator.                         | `string` | `null`  | no       |
-| security_hub | Member account id to designate as Security Hub organization administrator.                      | `string` | `null`  | no       |
+| Name                     | Description                                                                                                                       | Type           | Default | Required |
+| ------------------------ | --------------------------------------------------------------------------------------------------------------------------------- | -------------- | ------- | -------- |
+| enable                   | When true, creates delegation resources for any supplied account ids; when false, creates none.                                   | `bool`         | `true`  | no       |
+| cloudtrail               | Member account id to register as CloudTrail organization delegated administrator.                                                 | `string`       | `null`  | no       |
+| guardduty                | Member account id to designate as GuardDuty organization administrator.                                                           | `string`       | `null`  | no       |
+| guardduty_regions        | Regions where the GuardDuty delegated administrator is registered; the provider Region is always included.                        | `list(string)` | `[]`    | no       |
+| security_hub             | Member account id to designate as Security Hub organization administrator.                                                        | `string`       | `null`  | no       |
+| config                   | Member account id to register as AWS Config delegated administrator (`config` and `config-multiaccountsetup` service principals). | `string`       | `null`  | no       |
+| backup                   | Member account id to register as AWS Backup delegated administrator (also delegates BACKUP_POLICY management).                    | `string`       | `null`  | no       |
+| backup_policy_delegation | Create the Organizations resource policy that delegates BACKUP_POLICY management to the `backup` account.                         | `bool`         | `true`  | no       |
+| stacksets                | Member account id to register as CloudFormation StackSets delegated administrator.                                                | `string`       | `null`  | no       |
 
 
 
@@ -49,9 +57,12 @@ module "service_delegation" {
 
 ## ⚠️ Important Notes
 - **Management account:** Run with credentials for the AWS Organizations management account and IAM permissions that allow the underlying APIs.
-- **enable:** Defaults to **true** when omitted; set `enable = false` to create no delegation resources. Each of `cloudtrail`, `guardduty`, and `security_hub` is optional—omit or set `null` to skip that registration.
-- **Region:** GuardDuty and Security Hub registrations are evaluated in the configured AWS provider region.
-- **Scope:** Other services (for example Config or IAM Identity Center) are not handled here; use `aws_organizations_delegated_administrator` or other modules as needed.
+- **enable:** Defaults to **true** when omitted; set `enable = false` to create no delegation resources. Each of `cloudtrail`, `guardduty`, `security_hub`, and `config` is optional—omit or set `null` to skip that registration.
+- **Region:** GuardDuty delegation is Regional — the provider Region is always registered, and `guardduty_regions` adds more Regions (same delegated account in every Region, as AWS requires). Security Hub is registered only in the provider Region, which must be the intended central configuration home Region; central configuration propagates the delegated administrator to linked Regions.
+- **AWS Config:** `config` registers the account for both `config.amazonaws.com` (organization aggregator) and `config-multiaccountsetup.amazonaws.com` (organization rules and conformance packs); trusted access for both principals must be enabled in the organization.
+- **AWS Backup:** `backup` registers the account as `backup.amazonaws.com` delegated administrator and, unless `backup_policy_delegation = false`, creates the Organizations resource policy that lets it manage `BACKUP_POLICY` policies. An organization has a **single** resource policy: if one already exists (created manually), import it instead of creating a new one.
+- **StackSets:** `stacksets` registers the account as `member.org.stacksets.cloudformation.amazonaws.com` delegated administrator (service-managed StackSets with `call_as = DELEGATED_ADMIN`).
+- **Scope:** Other services (for example IAM Identity Center) are not handled here; use `aws_organizations_delegated_administrator` or other modules as needed.
 
 
 
